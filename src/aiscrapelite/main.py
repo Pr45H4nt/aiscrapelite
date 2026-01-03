@@ -50,7 +50,7 @@ def validate_data(data: str, required_fields: list = None) -> dict:
         }
 
 
-async def scrape(url: str, goal: str, required_fields: list = None, max_iterations: int = 5) -> dict:
+async def scrape(url: str, goal: str, required_fields: list = None, max_iterations: int = 1) -> dict:
     """
     the main scraping function - this does all the heavy lifting
 
@@ -122,8 +122,8 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) < 3:
-        print("Usage: python scraper.py <url> <goal>")
-        print('Example: python scraper.py "https://reddit.com" "get top 5 post titles"')
+        print("Usage: python main.py <url> <goal>")
+        print('Example: python main.py "https://reddit.com" "get top 5 post titles"')
         sys.exit(1)
 
     url = sys.argv[1]

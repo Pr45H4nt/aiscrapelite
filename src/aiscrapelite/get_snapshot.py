@@ -1,6 +1,3 @@
-# get_snapshot.py - scans the page and builds a list of clickable elements
-# this is what we send to the LLM so it knows whats on the page
-
 async def get_page_summary(page) -> str:
     """
     scans the webpage and creates a simple list of all interactive elements
