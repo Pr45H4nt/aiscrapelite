@@ -5,7 +5,8 @@ from llm import get_llm_commands
 from html_to_markdown import page_to_markdown
 from extract_info import extract_info
 import asyncio
-import json, re
+import json
+import re
 
 
 def validate_data(data: str, required_fields: list = None) -> dict:
@@ -15,10 +16,11 @@ def validate_data(data: str, required_fields: list = None) -> dict:
     """
 
     try:
-        # sometimes the LLM wraps JSON in markdown code blocks like ```json ... ```
-        # so we gotta strip that out first, took me a while to figure this out lol
+        # sometimes the LLM wraps JSON in markdown code blocks
+        # so we gotta strip that out first
         if "```" in data:
-            match = re.search(r'```(?:json)?\s*(.*?)\s*```', data, re.DOTALL)
+            pattern = r'```(?:json)?\s*(.*?)\s*```'
+            match = re.search(pattern, data, re.DOTALL)
             if match:
                 data = match.group(1)
 
@@ -50,12 +52,17 @@ def validate_data(data: str, required_fields: list = None) -> dict:
         }
 
 
-async def scrape(url: str, goal: str, required_fields: list = None, max_iterations: int = 1) -> dict:
+async def scrape(
+    url: str,
+    goal: str,
+    required_fields: list = None,
+    max_steps: int = 1
+) -> dict:
     """
     the main scraping function - this does all the heavy lifting
 
     how it works:
-    1. opens the url in a real browser (not headless so we can see whats happening)
+    1. opens the url in a browser (not headless so we can see whats happening)
     2. keeps asking the LLM what to do next until we reach the goal
     3. converts the final page to markdown
     4. asks LLM to extract the data we want
@@ -74,14 +81,14 @@ async def scrape(url: str, goal: str, required_fields: list = None, max_iteratio
         # this is the main loop - we keep going until LLM says we're done
         # or we hit max_iterations
         iteration = 0
-        while iteration < max_iterations:
+        while iteration < max_steps:
             iteration += 1
             print(f"\n--- Iteration {iteration} ---")
 
             # first, scan the page and get all clickable elements
             print("2. Analyzing page...")
             summary = await get_page_summary(page)
-            print(f"   Found {summary.count('[') } elements")
+            print(f"   Found {summary.count('[')} elements")
 
             # send the page summary to LLM and ask what to do next
             print("3. Getting commands from LLM...")
@@ -123,7 +130,8 @@ if __name__ == "__main__":
 
     if len(sys.argv) < 3:
         print("Usage: python scraper.py <url> <goal>")
-        print('Example: python scraper.py "https://reddit.com" "get top 5 post titles"')
+        print('Example: python scraper.py "https://reddit.com" '
+              '"get top 5 post titles"')
         sys.exit(1)
 
     url = sys.argv[1]

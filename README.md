@@ -106,7 +106,7 @@ async def main():
     result = await scrape(
         url="https://reddit.com",
         goal="search for 'python' and get the first 3 post titles",
-        max_iterations=3  # Allow multiple navigation steps
+        max_steps=3  # Allow multiple navigation steps
     )
 
     print(result)
@@ -116,7 +116,7 @@ asyncio.run(main())
 
 ## API Reference
 
-### `scrape(url, goal, required_fields=None, max_iterations=1)`
+### `scrape(url, goal, required_fields=None, max_steps=1)`
 
 Main scraping function.
 
@@ -127,7 +127,7 @@ Main scraping function.
 | `url` | `str` | required | The URL to scrape |
 | `goal` | `str` | required | Natural language description of what data to extract |
 | `required_fields` | `list` | `None` | List of field names that must be present in the result |
-| `max_iterations` | `int` | `1` | Maximum navigation steps before extracting data |
+| `max_steps` | `int` | `1` | Maximum navigation steps before extracting data |
 
 **Returns:**
 
@@ -166,7 +166,7 @@ result = await scrape(
 result = await scrape(
     url="https://google.com",
     goal="search for 'best python libraries 2024' and get the first 3 result titles and URLs",
-    max_iterations=2
+    max_steps=2
 )
 ```
 

@@ -19,14 +19,16 @@ def get_llm_commands(page_summary, goal, model_name="llama-3.3-70b-versatile"):
     which ones to click/fill to reach the goal
 
     returns a list of commands like:
-    [{"action": "fill", "index": 5, "value": "hello"}, {"action": "press_enter", "index": 5}]
+    [{"action": "fill", "index": 5, "value": "hello"},
+     {"action": "press_enter", "index": 5}]
 
     or empty list [] if the data is already visible on the page
     """
 
     # build the prompt - basically explaining to the LLM what it can do
     # and showing it the current page state
-    prompt = f"""You are a browser automation assistant. Analyze the page and determine the NEXT step(s) to reach the goal.
+    prompt = f"""You are a browser automation assistant. \
+Analyze the page and determine the NEXT step(s) to reach the goal.
 
 PAGE:
 {page_summary}
@@ -43,13 +45,14 @@ AVAILABLE ACTIONS:
 
 RULES:
 1. Look at the current page elements and decide what action(s) are needed NEXT.
-2. For search: first "fill" the search box, then "press_enter" on the same element.
+2. For search: first "fill" the search box, then "press_enter" on same element.
 3. Return 1-3 commands maximum per response.
-4. If the goal's data is ALREADY VISIBLE on the page (e.g., you can see post titles), return an EMPTY list: []
+4. If goal's data is ALREADY VISIBLE on page, return an EMPTY list: []
 5. Return ONLY valid JSON - no explanation, no markdown.
 
 EXAMPLE - Searching:
-[{{"action": "fill", "index": 5, "value": "hello"}}, {{"action": "press_enter", "index": 5}}]
+[{{"action": "fill", "index": 5, "value": "hello"}}, \
+{{"action": "press_enter", "index": 5}}]
 
 EXAMPLE - Data already visible:
 []
@@ -64,7 +67,9 @@ YOUR RESPONSE (JSON only):"""
         messages=[
             {
                 "role": "system",
-                "content": "You are a browser automation planner. Return ONLY a JSON array of commands. No explanation."
+                "content": "You are a browser automation planner. "
+                           "Return ONLY a JSON array of commands. "
+                           "No explanation."
             },
             {
                 "role": "user",
@@ -81,14 +86,15 @@ YOUR RESPONSE (JSON only):"""
     # sometimes the LLM wraps the JSON in markdown code blocks
     # like ```json [...] ``` so we need to extract just the JSON part
     if "```" in response:
-        match = re.search(r'```(?:json)?\s*(.*?)\s*```', response, re.DOTALL)
+        pattern = r'```(?:json)?\s*(.*?)\s*```'
+        match = re.search(pattern, response, re.DOTALL)
         if match:
             response = match.group(1)
 
     # try to parse as JSON
     try:
         return json.loads(response)
-    except:
+    except json.JSONDecodeError:
         # if parsing fails, just print what we got and return empty
         # better to do nothing than crash
         print(f"Failed to parse: {response}")

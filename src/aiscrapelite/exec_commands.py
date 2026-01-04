@@ -18,14 +18,15 @@ async def execute_commands(page, commands: list) -> bool:
 
     for cmd in commands:
         # grab the command details
-        action = cmd.get("action")  # what to do: click, fill, press_enter, etc
-        index = cmd.get("index")    # which element 
-        value = cmd.get("value")    # value for fill/select actions
+        action = cmd.get("action")  # what to do: click, fill, press_enter
+        index = cmd.get("index")  # which element
+        value = cmd.get("value")  # value for fill/select actions
 
-        print(f"  Executing: {action} on [{index}]" + (f" with '{value}'" if value else ""))
+        suffix = f" with '{value}'" if value else ""
+        print(f"  Executing: {action} on [{index}]" + suffix)
 
         try:
-            # find the element using the data-idx attribute we set in get_snapshot.py
+            # find the element using data-idx attribute from get_snapshot.py
             locator = page.locator(f'[data-idx="{index}"]')
 
             # make sure the element actually exists before trying to do stuff

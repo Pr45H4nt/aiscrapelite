@@ -10,23 +10,34 @@ async def get_page_summary(page) -> str:
     """
 
     # first, remove any data-idx attributes from previous runs
-    await page.evaluate("document.querySelectorAll('[data-idx]').forEach(el => el.removeAttribute('data-idx'))")
+    await page.evaluate(
+        "document.querySelectorAll('[data-idx]')"
+        ".forEach(el => el.removeAttribute('data-idx'))"
+    )
 
     # this JS code runs inside the browser and scans all the elements
     summary = await page.evaluate("""
         () => {
             const lines = [];
-            let visibleIdx = 0;  
+            let visibleIdx = 0;
 
-            const elements = document.querySelectorAll('a, button, input, select, textarea, [role="button"], [role="link"], [role="searchbox"], [role="textbox"]');
+            const selectors = [
+                'a', 'button', 'input', 'select', 'textarea',
+                '[role="button"]', '[role="link"]',
+                '[role="searchbox"]', '[role="textbox"]'
+            ].join(', ');
+            const elements = document.querySelectorAll(selectors);
 
             elements.forEach((el) => {
                 // === SKIP HIDDEN ELEMENTS ===
 
-                if (el.offsetParent === null && getComputedStyle(el).position !== 'fixed') return;
+                const style = getComputedStyle(el);
+                if (el.offsetParent === null && style.position !== 'fixed') {
+                    return;
+                }
 
-                if (getComputedStyle(el).visibility === 'hidden') return;
-                if (getComputedStyle(el).display === 'none') return;
+                if (style.visibility === 'hidden') return;
+                if (style.display === 'none') return;
 
                 const tag = el.tagName.toLowerCase();
                 const role = el.getAttribute('role');
@@ -36,28 +47,38 @@ async def get_page_summary(page) -> str:
                 // === BUILD THE DESCRIPTION FOR LLM ===
 
                 if (tag === 'a' || role === 'link') {
-                    // for links, try innerText first, then aria-label, then href
-                    const text = el.innerText.trim().slice(0, 50) || el.getAttribute('aria-label') || el.href || 'link';
+                    // for links: innerText, then aria-label, then href
+                    const text = el.innerText.trim().slice(0, 50) ||
+                        el.getAttribute('aria-label') || el.href || 'link';
                     lines.push(`[${visibleIdx}] LINK: "${text}"`);
                 }
                 else if (tag === 'button' || role === 'button') {
-                    const text = el.innerText.trim() || el.getAttribute('aria-label') || 'button';
+                    const text = el.innerText.trim() ||
+                        el.getAttribute('aria-label') || 'button';
                     lines.push(`[${visibleIdx}] BUTTON: "${text}"`);
                 }
-                else if (tag === 'input' || role === 'searchbox' || role === 'textbox') {
-                    // for inputs, placeholder text is usually the best description
-                    const placeholder = el.placeholder || el.getAttribute('aria-label') || el.name || el.type || 'input';
+                else if (
+                    tag === 'input' ||
+                    role === 'searchbox' ||
+                    role === 'textbox'
+                ) {
+                    // for inputs, placeholder is usually the best description
+                    const placeholder = el.placeholder ||
+                        el.getAttribute('aria-label') ||
+                        el.name || el.type || 'input';
                     lines.push(`[${visibleIdx}] INPUT: "${placeholder}"`);
                 }
                 else if (tag === 'select') {
-                    lines.push(`[${visibleIdx}] DROPDOWN: "${el.name || 'select'}"`);
+                    const name = el.name || 'select';
+                    lines.push(`[${visibleIdx}] DROPDOWN: "${name}"`);
                 }
                 else if (tag === 'textarea') {
-                    const placeholder = el.placeholder || el.getAttribute('aria-label') || 'textarea';
+                    const placeholder = el.placeholder ||
+                        el.getAttribute('aria-label') || 'textarea';
                     lines.push(`[${visibleIdx}] TEXTAREA: "${placeholder}"`);
                 }
 
-                visibleIdx++; 
+                visibleIdx++;
             });
 
             return lines.join('\\n');

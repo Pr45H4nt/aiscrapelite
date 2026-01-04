@@ -13,17 +13,19 @@ async def page_to_markdown(page) -> str:
     # === CLEAN UP THE HTML ===
     # remove stuff that just adds noise and confuses the LLM
 
-    # remove all <script> tags 
-    html = re.sub(r'<script[^>]*>.*?</script>', '', html, flags=re.DOTALL | re.IGNORECASE)
+    flags = re.DOTALL | re.IGNORECASE
+
+    # remove all <script> tags
+    html = re.sub(r'<script[^>]*>.*?</script>', '', html, flags=flags)
 
     # remove all <style> tags - CSS doesnt matter for content extraction
-    html = re.sub(r'<style[^>]*>.*?</style>', '', html, flags=re.DOTALL | re.IGNORECASE)
+    html = re.sub(r'<style[^>]*>.*?</style>', '', html, flags=flags)
 
     # remove navigation
-    html = re.sub(r'<nav[^>]*>.*?</nav>', '', html, flags=re.DOTALL | re.IGNORECASE)
+    html = re.sub(r'<nav[^>]*>.*?</nav>', '', html, flags=flags)
 
-    # remove footer 
-    html = re.sub(r'<footer[^>]*>.*?</footer>', '', html, flags=re.DOTALL | re.IGNORECASE)
+    # remove footer
+    html = re.sub(r'<footer[^>]*>.*?</footer>', '', html, flags=flags)
 
     # convert to markdown using the markdownify library
     markdown = md(html, heading_style="ATX")
